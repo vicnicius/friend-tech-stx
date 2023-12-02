@@ -58,9 +58,9 @@ balance = 100_000_000_000_000
 # stx_address: ST3PF13W7Z0RRM42A8VZRVFQ75SV1K26RXEP8YGKJ
 # btc_address: n37mwmru2oaVosgfuvzBwgV2ysCQRrLko7
 
-[accounts.wallet_8]
+[accounts.wallet_poor_guy]
 mnemonic = "female adjust gallery certain visit token during great side clown fitness like hurt clip knife warm bench start reunion globe detail dream depend fortune"
-balance = 100_000_000_000_000
+balance = 0
 # secret_key: 6a1a754ba863d7bab14adbbc3f8ebb090af9e871ace621d3e5ab634e1422885e01
 # stx_address: ST3NBRSFKX28FQ2ZJ1MAKX58HKHSDGNV5N7R21XCP
 # btc_address: n2v875jbJ4RjBnTjgbfikDfnwsDV5iUByw

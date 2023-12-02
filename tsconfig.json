@@ -22,5 +22,9 @@
       ]
     }
   },
-  "include": ["./src"]
+  "include": [
+    "./src",
+    "node_modules/@hirosystems/clarinet-sdk/vitest-helpers/src",
+    "tests"
+  ]
 }
