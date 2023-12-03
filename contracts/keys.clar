@@ -11,6 +11,7 @@
 ;; Errors
 (define-constant err-no-supply-available (err u100))
 (define-constant err-stx-transfer-failed (err u101))
+(define-constant err-invalid-sell (err u102))
 
 ;; Public fns
 ;; TODO: Remove supply initialization to own public function 
@@ -58,17 +59,15 @@
             (ok true)
           )
           error
-          (err u2)
+          err-stx-transfer-failed
         )
       )
-      (err u1)
+      err-invalid-sell
     )
   )
 )
 
-;; read only functions
-;;
-(define-read-only (get-price (supply uint) (amount uint))
+(define-private (get-price (supply uint) (amount uint))
   (let
     (
       (base-price u10)
@@ -79,14 +78,14 @@
   )
 )
 
-(define-read-only (get-supply (subject principal))
+(define-read-only (get-keys-supply (subject principal))
   (default-to u0 (map-get? keysSupply { subject: subject }))
+)
+
+(define-read-only (get-keys-balance (subject principal) (holder principal))
+  (default-to u0 (map-get? keysBalance { subject: subject, holder: holder }))
 )
 
 (define-read-only (is-keyholder (subject principal) (holder principal))
   (>= (default-to u0 (map-get? keysBalance { subject: subject, holder: holder })) u1)
 )
-
-;; private functions
-;;
-
