@@ -55,16 +55,13 @@
         (let
           (
             (price (get-price (- supply amount) amount))
-          )
-          (match (as-contract (stx-transfer? price tx-sender recipient))
-            success
-            (begin
-              (map-set keysBalance { subject: subject, holder: tx-sender } (- balance amount))
-              (map-set keysSupply { subject: subject } (- supply amount))
-              (ok true)
-            )
-            error
-            err-stx-transfer-failed
+            (fee (get-fee price)))
+          (begin
+            (try! ( if (> fee u0) (stx-transfer? fee recipient (var-get protocolFeeDestination)) (ok true)))
+            (try! (as-contract (stx-transfer? price tx-sender recipient)))
+            (map-set keysBalance { subject: subject, holder: tx-sender } (- balance amount))
+            (map-set keysSupply { subject: subject } (- supply amount))
+            (ok true)
           )
         )
       )
