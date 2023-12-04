@@ -240,12 +240,6 @@ describe('Keys contract', async () => {
     });
 
     it('should decrease price after each sell', () => {
-      // ** Deployer needs to fund the contract to fulfill all the sells on this test
-      simnet.transferSTX(
-        100_000,
-        principalToString(Cl.contractPrincipal(deployer, 'keys')),
-        deployer
-      );
       simnet.callPublicFn(
         'keys',
         'buy-keys',
@@ -278,7 +272,7 @@ describe('Keys contract', async () => {
         address1
       );
       const firstTransfer = firstSell[0];
-      expect(Number(firstTransfer.data.amount)).toBe(260);
+      expect(Number(firstTransfer.data.amount)).toBe(170);
 
       const { events: secondSell } = simnet.callPublicFn(
         'keys',
@@ -287,7 +281,7 @@ describe('Keys contract', async () => {
         address2
       );
       const secondTransfer = secondSell[0];
-      expect(Number(secondTransfer.data.amount)).toBe(170);
+      expect(Number(secondTransfer.data.amount)).toBe(100);
 
       const { events: thirdSell } = simnet.callPublicFn(
         'keys',
@@ -296,7 +290,7 @@ describe('Keys contract', async () => {
         address3
       );
       const thirdTransfer = thirdSell[0];
-      expect(Number(thirdTransfer.data.amount)).toBe(100);
+      expect(Number(thirdTransfer.data.amount)).toBe(50);
 
       const { events: fourthSell } = simnet.callPublicFn(
         'keys',
@@ -305,7 +299,7 @@ describe('Keys contract', async () => {
         address4
       );
       const fourthTransfer = fourthSell[0];
-      expect(Number(fourthTransfer.data.amount)).toBe(50);
+      expect(Number(fourthTransfer.data.amount)).toBe(20);
     });
   });
 });

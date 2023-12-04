@@ -46,20 +46,25 @@
     (
       (balance (default-to u0 (map-get? keysBalance { subject: subject, holder: tx-sender })))
       (supply (default-to u0 (map-get? keysSupply { subject: subject })))
-      (price (get-price supply amount))
       (recipient tx-sender)
     )
     (if (and (>= balance amount) (or (> supply u0) (is-eq tx-sender subject)))
       (begin
-        (match (as-contract (stx-transfer? price tx-sender recipient))
-          success
-          (begin
-            (map-set keysBalance { subject: subject, holder: tx-sender } (- balance amount))
-            (map-set keysSupply { subject: subject } (- supply amount))
-            (ok true)
+        (asserts! (>= supply amount) err-invalid-sell)
+        (let
+          (
+            (price (get-price (- supply amount) amount))
           )
-          error
-          err-stx-transfer-failed
+          (match (as-contract (stx-transfer? price tx-sender recipient))
+            success
+            (begin
+              (map-set keysBalance { subject: subject, holder: tx-sender } (- balance amount))
+              (map-set keysSupply { subject: subject } (- supply amount))
+              (ok true)
+            )
+            error
+            err-stx-transfer-failed
+          )
         )
       )
       err-invalid-sell
