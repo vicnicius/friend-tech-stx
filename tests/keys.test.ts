@@ -73,20 +73,29 @@ describe('Keys contract', async () => {
           Cl.tuple({ subject: Cl.standardPrincipal(poorGuy) })
         )
       ).toThrow();
-      expect(buyKeysResponse).toEqual(Cl.error(Cl.uint(101)));
+      expect(buyKeysResponse).toEqual(Cl.error(Cl.uint(1)));
     });
 
-    it('should transfer the "price" to the contract', () => {
+    it('should transfer the keys price to the conract and the fee to the contract fee destination', () => {
       const { events } = simnet.callPublicFn(
         'keys',
         'buy-keys',
         [Cl.standardPrincipal(address1), Cl.uint(10)],
         address1
       );
-      expect(events).toHaveLength(1);
-      const stxTransfer = events[0];
-      expect(stxTransfer.event).toBe('stx_transfer_event');
-      expect(stxTransfer.data).toEqual({
+      expect(events).toHaveLength(2);
+
+      const feeTransfer = events[0];
+      expect(feeTransfer.event).toBe('stx_transfer_event');
+      expect(feeTransfer.data).toEqual({
+        sender: address1,
+        recipient: deployer,
+        amount: '1',
+        memo: ''
+      });
+      const priceTransfer = events[1];
+      expect(priceTransfer.event).toBe('stx_transfer_event');
+      expect(priceTransfer.data).toEqual({
         sender: address1,
         recipient: principalToString(Cl.contractPrincipal(deployer, 'keys')),
         amount: '20',
@@ -134,8 +143,9 @@ describe('Keys contract', async () => {
         [Cl.standardPrincipal(address1), Cl.uint(10)],
         address1
       );
-      const initialTransfer = initKeyBuy[0];
-      expect(Number(initialTransfer.data.amount)).toBe(20);
+      const [initialTransferFee, initialTransferPrice] = initKeyBuy;
+      expect(Number(initialTransferFee.data.amount)).toBe(1);
+      expect(Number(initialTransferPrice.data.amount)).toBe(20);
 
       const { events: firstBuy } = simnet.callPublicFn(
         'keys',
@@ -143,8 +153,9 @@ describe('Keys contract', async () => {
         [Cl.standardPrincipal(address1), Cl.uint(10)],
         address2
       );
-      const firstTransfer = firstBuy[0];
-      expect(Number(firstTransfer.data.amount)).toBe(50);
+      const [firstTransferFee, firstTransferPrice] = firstBuy;
+      expect(Number(firstTransferFee.data.amount)).toBe(2);
+      expect(Number(firstTransferPrice.data.amount)).toBe(50);
 
       const { events: secondBuy } = simnet.callPublicFn(
         'keys',
@@ -152,8 +163,9 @@ describe('Keys contract', async () => {
         [Cl.standardPrincipal(address1), Cl.uint(10)],
         address3
       );
-      const secondTransfer = secondBuy[0];
-      expect(Number(secondTransfer.data.amount)).toBe(100);
+      const [secondTransferFee, secondTransferPrice] = secondBuy;
+      expect(Number(secondTransferFee.data.amount)).toBe(5);
+      expect(Number(secondTransferPrice.data.amount)).toBe(100);
 
       const { events: thirdBuy } = simnet.callPublicFn(
         'keys',
@@ -161,8 +173,9 @@ describe('Keys contract', async () => {
         [Cl.standardPrincipal(address1), Cl.uint(10)],
         address4
       );
-      const thirdTransfer = thirdBuy[0];
-      expect(Number(thirdTransfer.data.amount)).toBe(170);
+      const [thirdTransferFee, thirdTransferPrice] = thirdBuy;
+      expect(Number(thirdTransferFee.data.amount)).toBe(8);
+      expect(Number(thirdTransferPrice.data.amount)).toBe(170);
     });
   });
 

@@ -4,6 +4,12 @@
 ;; description: A Friend.tech miminal clone, part of the Hiro Hacks 2023 Hackathon
 ;; author: vicnicius<me@vicnicius.com>
 
+;; Protocol Fees
+(define-data-var priceChangeFactor uint u100)
+(define-data-var basePrice uint u10)
+(define-data-var protocolFeePercent uint u5)
+(define-data-var protocolFeeDestination principal tx-sender)
+
 ;; Maps
 (define-map keysBalance { subject: principal, holder: principal } uint)
 (define-map keysSupply { subject: principal } uint)
@@ -20,22 +26,17 @@
     (
       (supply (default-to u0 (map-get? keysSupply { subject: subject })))
       (price (get-price supply amount))
+      (fee (get-fee price))
     )
     (if (or (> supply u0) (is-eq tx-sender subject))
       (begin
-        (match (stx-transfer? price tx-sender (as-contract tx-sender))
-          success
-          (begin
-            (map-set keysBalance { subject: subject, holder: tx-sender }
-              (+ (default-to u0 (map-get? keysBalance { subject: subject, holder: tx-sender })) amount)
-            )
-            (map-set keysSupply { subject: subject } (+ supply amount))
-            (ok true)
-          )
-          error
-          err-stx-transfer-failed
+        (try! (if (> fee u0) (stx-transfer? fee tx-sender (var-get protocolFeeDestination)) (ok true)))
+        (try! (stx-transfer? price tx-sender (as-contract tx-sender)))
+        (map-set keysBalance { subject: subject, holder: tx-sender }
+          (+ (default-to u0 (map-get? keysBalance { subject: subject, holder: tx-sender })) amount)
         )
-      )
+        (map-set keysSupply { subject: subject } (+ supply amount))
+        (ok true))
       err-no-supply-available
     )
   )
@@ -75,12 +76,14 @@
 (define-private (get-price (supply uint) (amount uint))
   (let
     (
-      (base-price u10)
-      (price-change-factor u100)
       (adjusted-supply (+ supply amount))
     )
-    (+ base-price (* amount (/ (* adjusted-supply adjusted-supply) price-change-factor)))
+    (+ (var-get basePrice) (* amount (/ (* adjusted-supply adjusted-supply) (var-get priceChangeFactor))))
   )
+)
+
+(define-private (get-fee (transactionPrice uint))
+  (/ (* transactionPrice (var-get protocolFeePercent)) u100)
 )
 
 (define-read-only (get-keys-supply (subject principal))
