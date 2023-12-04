@@ -91,6 +91,23 @@
   (default-to u0 (map-get? keysBalance { subject: subject, holder: holder }))
 )
 
+(define-read-only (get-buy-price (subject principal) (amount uint))
+  (let
+    (
+      (supply (get-keys-supply subject))
+    )
+    (ok (get-price supply amount)))
+)
+
+(define-read-only (get-sell-price (subject principal) (amount uint))
+  (let
+    (
+      (supply (get-keys-supply subject))
+    )
+    (asserts! (>= supply amount) err-invalid-sell)
+    (ok (get-price (- supply amount) amount)))
+)
+
 (define-read-only (is-keyholder (subject principal) (holder principal))
   (>= (default-to u0 (map-get? keysBalance { subject: subject, holder: holder })) u1)
 )
