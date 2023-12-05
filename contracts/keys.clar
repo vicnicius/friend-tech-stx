@@ -18,26 +18,30 @@
 (define-constant err-no-supply-available (err u100))
 (define-constant err-stx-transfer-failed (err u101))
 (define-constant err-invalid-sell (err u102))
+(define-constant err-invalid-buy (err u103))
 
 ;; Public fns
 ;; TODO: Remove supply initialization to own public function 
 (define-public (buy-keys (subject principal) (amount uint))
-  (let
-    (
-      (supply (default-to u0 (map-get? keysSupply { subject: subject })))
-      (price (get-price supply amount))
-      (fee (get-fee price))
-    )
-    (if (or (> supply u0) (is-eq tx-sender subject))
-      (begin
-        (try! (if (> fee u0) (stx-transfer? fee tx-sender (var-get protocolFeeDestination)) (ok true)))
-        (try! (stx-transfer? price tx-sender (as-contract tx-sender)))
-        (map-set keysBalance { subject: subject, holder: tx-sender }
-          (+ (default-to u0 (map-get? keysBalance { subject: subject, holder: tx-sender })) amount)
-        )
-        (map-set keysSupply { subject: subject } (+ supply amount))
-        (ok true))
-      err-no-supply-available
+  (begin
+    (asserts! (> amount u0) err-invalid-buy)
+    (let
+      (
+        (supply (default-to u0 (map-get? keysSupply { subject: subject })))
+        (price (get-price supply amount))
+        (fee (get-fee price))
+      )
+      (if (or (> supply u0) (is-eq tx-sender subject))
+        (begin
+          (try! (if (> fee u0) (stx-transfer? fee tx-sender (var-get protocolFeeDestination)) (ok true)))
+          (try! (stx-transfer? price tx-sender (as-contract tx-sender)))
+          (map-set keysBalance { subject: subject, holder: tx-sender }
+            (+ (default-to u0 (map-get? keysBalance { subject: subject, holder: tx-sender })) amount)
+          )
+          (map-set keysSupply { subject: subject } (+ supply amount))
+          (ok true))
+        err-no-supply-available
+      )
     )
   )
 )
