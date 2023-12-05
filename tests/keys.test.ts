@@ -319,4 +319,70 @@ describe('Keys contract', async () => {
       expect(Number(fourthTransferPrice.data.amount)).toBe(20);
     });
   });
+
+  describe('set-protocol-fee-percentage', () => {
+    it('should only allow the contract owner to set the protocol fee percentage', () => {
+      const feeBefore = simnet.getDataVar('keys', 'protocolFeePercent');
+      expect(feeBefore).toStrictEqual(Cl.uint(5));
+
+      const { result: unauthorizedRequest } = simnet.callPublicFn(
+        'keys',
+        'set-protocol-fee-percentage',
+        [Cl.uint(1)],
+        address4
+      );
+      expect(unauthorizedRequest).toStrictEqual(Cl.error(Cl.uint(401)));
+
+      const feeAfterUnauthorized = simnet.getDataVar(
+        'keys',
+        'protocolFeePercent'
+      );
+      expect(feeAfterUnauthorized).toStrictEqual(Cl.uint(5));
+
+      const { result: authorizedRequest } = simnet.callPublicFn(
+        'keys',
+        'set-protocol-fee-percentage',
+        [Cl.uint(35)],
+        deployer
+      );
+      expect(authorizedRequest).toStrictEqual(Cl.ok(Cl.bool(true)));
+      const feeAfterAuthorized = simnet.getDataVar(
+        'keys',
+        'protocolFeePercent'
+      );
+      expect(feeAfterAuthorized).toStrictEqual(Cl.uint(35));
+    });
+  });
+
+  describe('set-new-contract-owner', () => {
+    it('should only allow the contract owner to set the contract owner', () => {
+      const ownerBefore = simnet.getDataVar('keys', 'contractOwner');
+      expect(ownerBefore).toStrictEqual(Cl.standardPrincipal(deployer));
+
+      const { result: unauthorizedRequest } = simnet.callPublicFn(
+        'keys',
+        'set-new-contract-owner',
+        [Cl.standardPrincipal(address4)],
+        address4
+      );
+      expect(unauthorizedRequest).toStrictEqual(Cl.error(Cl.uint(401)));
+
+      const ownerAfterUnauthorized = simnet.getDataVar('keys', 'contractOwner');
+      expect(ownerAfterUnauthorized).toStrictEqual(
+        Cl.standardPrincipal(deployer)
+      );
+
+      const { result: authorizedRequest } = simnet.callPublicFn(
+        'keys',
+        'set-new-contract-owner',
+        [Cl.standardPrincipal(address4)],
+        deployer
+      );
+      expect(authorizedRequest).toStrictEqual(Cl.ok(Cl.bool(true)));
+      const ownerAfterAuthorized = simnet.getDataVar('keys', 'contractOwner');
+      expect(ownerAfterAuthorized).toStrictEqual(
+        Cl.standardPrincipal(address4)
+      );
+    });
+  });
 });

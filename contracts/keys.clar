@@ -2,13 +2,14 @@
 ;; version: 0.0.1
 ;; summary: A smart contract to manage subject keys
 ;; description: A Friend.tech miminal clone, part of the Hiro Hacks 2023 Hackathon
-;; author: vicnicius<me@vicnicius.com>
+;; author: Vini<me@vicnicius.com>
 
 ;; Protocol Fees
 (define-data-var priceChangeFactor uint u100)
 (define-data-var basePrice uint u10)
 (define-data-var protocolFeePercent uint u5)
 (define-data-var protocolFeeDestination principal tx-sender)
+(define-data-var contractOwner principal tx-sender)
 
 ;; Maps
 (define-map keysBalance { subject: principal, holder: principal } uint)
@@ -19,6 +20,7 @@
 (define-constant err-stx-transfer-failed (err u101))
 (define-constant err-invalid-sell (err u102))
 (define-constant err-invalid-buy (err u103))
+(define-constant err-unauthorized (err u401))
 
 ;; Public fns
 ;; TODO: Remove supply initialization to own public function 
@@ -73,6 +75,19 @@
     )
   )
 )
+
+(define-public (set-new-contract-owner (newOwner principal))
+  (begin 
+    (asserts! (is-eq tx-sender (var-get contractOwner)) err-unauthorized)
+    (var-set contractOwner newOwner)
+    (ok true)))
+  
+
+(define-public (set-protocol-fee-percentage (feePercent uint))
+  (begin
+    (asserts! (is-eq tx-sender (var-get contractOwner)) err-unauthorized)
+    (var-set protocolFeePercent feePercent)
+    (ok true)))
 
 (define-private (get-price (supply uint) (amount uint))
   (let
