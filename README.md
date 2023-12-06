@@ -1,6 +1,6 @@
 # README
 
-This repository contains my take on hacking a [friend.tech](https://docs.hiro.so/hacks/build-a-friend-tech-clone) clone. I wasn't familiar with friend.tech before, so I'm not sure if the project went on the write direction. Code looks horrible, but features seem to work ok.
+This repository contains my take on hacking a [friend.tech](https://docs.hiro.so/hacks/build-a-friend-tech-clone) clone. I wasn't familiar with friend.tech before, so I'm not sure if the project went on the right direction. Code looks horrible, but features should be working fine.
 
 The idea here is to create smart-contract-enabled chat rooms, where only key holders can interact.
 
