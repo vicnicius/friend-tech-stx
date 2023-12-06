@@ -29,3 +29,5 @@ When in the room, you also have the option to sell your keys.
 There's some very basic checks in place for allowing a user to connect to a room. The server will give the user a message (should be a random one in production) and require them to sign it as a proof of identity. The server also checks if the user is a holder of the key for the room they're trying to join.
 
 To be able to buy a key, the subject must have started a supply themselves. There's supply initiated for the address ST203SGZM0XR3P4YSVD2XVMF1N63CRG2DRXT4C7AE
+
+Once you join a room you can talk to other key holders who have also joined the room. There's no persistence in place, so you only see the messages you receive while in the room.
