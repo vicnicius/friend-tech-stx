@@ -8,6 +8,8 @@ import {
 } from 'react';
 import {
   AppConfig,
+  ContractCallOptions,
+  openContractCall,
   openSignatureRequestPopup,
   showConnect,
   UserSession
@@ -18,6 +20,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { StacksTestnet } from '@stacks/network';
 import { io, Socket } from 'socket.io-client';
 import { truncateAddress } from './lib/utils';
+import { PostConditionMode, principalCV, uintCV } from '@stacks/transactions';
+import { ExternalLink } from './external-link';
+
+const contractAddress = 'ST203SGZM0XR3P4YSVD2XVMF1N63CRG2DRXT4C7AE';
+const network = new StacksTestnet();
 
 const Message = ({
   author,
@@ -42,6 +49,10 @@ const ChatRoom = memo(
   ({ holder, subject }: { holder: string; subject: string }) => {
     const socket = useRef<Socket>();
     const navigate = useNavigate();
+    const [sellKeys, setSellKeys] = useState(false);
+    const [sellInProgress, setSellInProgress] = useState(false);
+    const [sellKeysTransaction, setSellKeysTransaction] = useState('');
+    const [numberOfKeys, setNumberOfKeys] = useState(1);
     const [messages, setMessages] = useState<
       { author: string; message: string }[]
     >([]);
@@ -122,6 +133,32 @@ const ChatRoom = memo(
       return false;
     };
 
+    const handleSellKeys = async (numberOfKeys: number) => {
+      setSellInProgress(true);
+      const txOptions: ContractCallOptions = {
+        contractAddress,
+        contractName: 'keys',
+        functionName: 'sell-keys',
+        functionArgs: [principalCV(subject), uintCV(numberOfKeys)],
+        appDetails: {
+          name: 'Hiro Friends',
+          icon: 'src/favicon.svg'
+        },
+        senderKey:
+          'b244296d5907de9864c0b0d51f98a13c52890be0404e83f273144cd5b9960eed01',
+        network,
+        postConditionMode: PostConditionMode.Allow,
+        onFinish: (data) => {
+          setSellKeysTransaction(data.txId);
+          setSellInProgress(false);
+        },
+        onCancel: () => {
+          setSellInProgress(false);
+        }
+      };
+      openContractCall(txOptions);
+    };
+
     const handleLeave = () => {
       socket.current?.close();
       navigate('/');
@@ -162,9 +199,43 @@ const ChatRoom = memo(
           </form>
           <span className="text-xs text-center mt-2">{status}</span>
         </div>
-        <Button className="mt" variant="link" onClick={handleLeave}>
-          Leave Room
-        </Button>
+        <div className="mt-2 flex self-center justify-between">
+          <Button
+            className="mt"
+            variant="link"
+            onClick={() => setSellKeys(true)}
+          >
+            {sellInProgress ? 'Selling...' : 'Sell Keys'}
+          </Button>
+          <Button className="mt" variant="link" onClick={handleLeave}>
+            Leave Room
+          </Button>
+        </div>
+        {sellKeys && (
+          <>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                className="border-1 border-slate-300 p-2"
+                onChange={(e) => setNumberOfKeys(Number(e.currentTarget.value))}
+                value={numberOfKeys}
+              />
+              <Button onClick={() => handleSellKeys(numberOfKeys)}>
+                {sellInProgress ? 'Selling...' : 'Sell Keys'}
+              </Button>
+            </div>
+            {sellKeysTransaction !== '' && (
+              <span className="text-xs mt-2">
+                Transaction sent.{' '}
+                <ExternalLink
+                  href={`https://explorer.hiro.so/txid/0x${sellKeysTransaction}?chain=testnet`}
+                >
+                  Check on explorer
+                </ExternalLink>
+              </span>
+            )}
+          </>
+        )}
       </div>
     );
   }

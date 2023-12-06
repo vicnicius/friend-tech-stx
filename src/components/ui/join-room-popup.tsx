@@ -12,7 +12,6 @@ import {
 import { StacksTestnet } from '@stacks/network';
 import { useNavigate } from 'react-router-dom';
 import { ContractCallOptions, openContractCall } from '@stacks/connect';
-import { SelectScrollUpButton } from '@radix-ui/react-select';
 import { ExternalLink } from '@/external-link';
 
 const successStatus = 'You are a key holder.';
@@ -82,10 +81,12 @@ const Result = ({
             onChange={(e) => setNumberOfKeys(Number(e.currentTarget.value))}
             value={numberOfKeys}
           />
-          <Button onClick={() => handleBuyKeys(numberOfKeys)}>Buy Keys</Button>
+          <Button onClick={() => handleBuyKeys(numberOfKeys)}>
+            {buyInProgress ? 'Buying...' : 'Buy Keys'}
+          </Button>
         </div>
       )}
-      {buyKeysTransaction && (
+      {buyKeysTransaction !== '' && (
         <span className="text-xs mt-2">
           Transaction sent.{' '}
           <ExternalLink
