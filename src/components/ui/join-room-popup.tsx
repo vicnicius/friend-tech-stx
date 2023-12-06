@@ -3,6 +3,7 @@ import { MouseEventHandler, useState } from 'react';
 import { Button } from './button';
 import { X } from 'lucide-react';
 import {
+  PostConditionMode,
   callReadOnlyFunction,
   cvToValue,
   principalCV,
@@ -10,7 +11,9 @@ import {
 } from '@stacks/transactions';
 import { StacksTestnet } from '@stacks/network';
 import { useNavigate } from 'react-router-dom';
-import { openContractCall } from '@stacks/connect';
+import { ContractCallOptions, openContractCall } from '@stacks/connect';
+import { SelectScrollUpButton } from '@radix-ui/react-select';
+import { ExternalLink } from '@/external-link';
 
 const successStatus = 'You are a key holder.';
 const notAHolderMessage = 'You are not a key holder';
@@ -27,8 +30,11 @@ const Result = ({
 }) => {
   const navigate = useNavigate();
   const [numberOfKeys, setNumberOfKeys] = useState(1);
+  const [buyInProgress, setBuyInProgress] = useState(false);
+  const [buyKeysTransaction, setBuyKeysTransaction] = useState('');
   const handleBuyKeys = async (numberOfKeys: number) => {
-    const txOptions = {
+    setBuyInProgress(true);
+    const txOptions: ContractCallOptions = {
       contractAddress,
       contractName: 'keys',
       functionName: 'buy-keys',
@@ -39,9 +45,15 @@ const Result = ({
       },
       senderKey:
         'b244296d5907de9864c0b0d51f98a13c52890be0404e83f273144cd5b9960eed01',
-      validateWithAbi: true,
-      network
-      // TODO: postConditions
+      network,
+      postConditionMode: PostConditionMode.Allow,
+      onFinish: (data) => {
+        setBuyKeysTransaction(data.txId);
+        setBuyInProgress(false);
+      },
+      onCancel: () => {
+        setBuyInProgress(false);
+      }
     };
     openContractCall(txOptions);
   };
@@ -72,6 +84,16 @@ const Result = ({
           />
           <Button onClick={() => handleBuyKeys(numberOfKeys)}>Buy Keys</Button>
         </div>
+      )}
+      {buyKeysTransaction && (
+        <span className="text-xs mt-2">
+          Transaction sent.{' '}
+          <ExternalLink
+            href={`https://explorer.hiro.so/txid/0x${buyKeysTransaction}?chain=testnet`}
+          >
+            Check on explorer
+          </ExternalLink>
+        </span>
       )}
     </div>
   );

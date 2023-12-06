@@ -14,7 +14,7 @@ import {
 } from '@stacks/connect';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { StacksTestnet } from '@stacks/network';
 import { io, Socket } from 'socket.io-client';
 import { truncateAddress } from './lib/utils';
@@ -41,6 +41,7 @@ const Message = ({
 const ChatRoom = memo(
   ({ holder, subject }: { holder: string; subject: string }) => {
     const socket = useRef<Socket>();
+    const navigate = useNavigate();
     const [messages, setMessages] = useState<
       { author: string; message: string }[]
     >([]);
@@ -123,6 +124,7 @@ const ChatRoom = memo(
 
     const handleLeave = () => {
       socket.current?.close();
+      navigate('/');
     };
     return (
       <div className="flex flex-col items-center justify-center min-h-screen px-8">
