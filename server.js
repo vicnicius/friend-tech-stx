@@ -5,6 +5,7 @@ const server = http.createServer(app);
 const cors = require('cors');
 const { Server } = require('socket.io');
 const { verifyMessageSignatureRsv } = require('@stacks/encryption');
+
 const {
   callReadOnlyFunction,
   getAddressFromPublicKey,
@@ -35,7 +36,7 @@ const verifyIsHolder = async (subject, holder) => {
     functionArgs,
     senderAddress: holder
   });
-  console.log(cvToValue(response));
+  return cvToValue(response);
 };
 
 app.use(cors());

@@ -5,15 +5,46 @@ import { X } from 'lucide-react';
 import {
   callReadOnlyFunction,
   cvToValue,
-  principalCV
+  principalCV,
+  uintCV
 } from '@stacks/transactions';
 import { StacksTestnet } from '@stacks/network';
 import { useNavigate } from 'react-router-dom';
+import { openContractCall } from '@stacks/connect';
 
 const successStatus = 'You are a key holder.';
+const notAHolderMessage = 'You are not a key holder';
+const contractAddress = 'ST203SGZM0XR3P4YSVD2XVMF1N63CRG2DRXT4C7AE';
+const network = new StacksTestnet();
 
-const Result = ({ status, subject }: { status: string; subject: string }) => {
+const Result = ({
+  status,
+  subject
+}: {
+  status: string;
+  subject: string;
+  isHolder: boolean;
+}) => {
   const navigate = useNavigate();
+  const [numberOfKeys, setNumberOfKeys] = useState(1);
+  const handleBuyKeys = async (numberOfKeys: number) => {
+    const txOptions = {
+      contractAddress,
+      contractName: 'keys',
+      functionName: 'buy-keys',
+      functionArgs: [principalCV(subject), uintCV(numberOfKeys)],
+      appDetails: {
+        name: 'Hiro Friends',
+        icon: 'src/favicon.svg'
+      },
+      senderKey:
+        'b244296d5907de9864c0b0d51f98a13c52890be0404e83f273144cd5b9960eed01',
+      validateWithAbi: true,
+      network
+      // TODO: postConditions
+    };
+    openContractCall(txOptions);
+  };
   const isHolder = status === successStatus;
   if (isHolder) {
     return (
@@ -30,20 +61,29 @@ const Result = ({ status, subject }: { status: string; subject: string }) => {
   }
   return (
     <div className="mt-4 border-t border-slate-300 border-dashed w-full py-2 italic">
-      {status}
+      <p className="mb-2">{status}</p>
+      {status === notAHolderMessage && (
+        <div className="flex gap-2">
+          <input
+            type="number"
+            className="border-1 border-slate-300 p-2"
+            onChange={(e) => setNumberOfKeys(Number(e.currentTarget.value))}
+            value={numberOfKeys}
+          />
+          <Button onClick={() => handleBuyKeys(numberOfKeys)}>Buy Keys</Button>
+        </div>
+      )}
     </div>
   );
 };
-const network = new StacksTestnet();
 
 const checkIfIsHolder = async (
   holder: string,
   subject: string,
   senderAddress: string
 ) => {
-  const contractAddress = 'ST203SGZM0XR3P4YSVD2XVMF1N63CRG2DRXT4C7AE';
   const contractName = 'keys';
-  const functionName = 'is-key-holder';
+  const functionName = 'is-keyholder';
 
   const functionArgs = [principalCV(subject), principalCV(holder)];
 
@@ -61,8 +101,9 @@ const checkIfIsHolder = async (
 
 export const JoinRoomPopup = ({ address }: { address: string }) => {
   const [open, setOpen] = useState(false);
+  const [isHolder, setIsHolder] = useState(false);
   const [subjectAddress, setSubjectAddress] = useState('');
-  const [roomStatus, setRoomStatus] = useState(successStatus);
+  const [roomStatus, setRoomStatus] = useState('');
   const checkAccess: MouseEventHandler = (event) => {
     event.preventDefault();
     if (subjectAddress.length === 0) {
@@ -71,9 +112,13 @@ export const JoinRoomPopup = ({ address }: { address: string }) => {
     }
     setRoomStatus('Checking...');
     checkIfIsHolder(address, subjectAddress, address)
-      .then((result) => {
-        console.log(result);
+      .then((isHolder) => {
+        console.log({ isHolder });
+        setRoomStatus(notAHolderMessage);
         // Check result and follow-up
+        if (isHolder) {
+          setIsHolder(true);
+        }
       })
       .catch((error) => {
         console.error(error);
@@ -115,7 +160,11 @@ export const JoinRoomPopup = ({ address }: { address: string }) => {
                 Check Access
               </Button>
             </form>
-            <Result status={roomStatus} subject={subjectAddress} />
+            <Result
+              status={roomStatus}
+              subject={subjectAddress}
+              isHolder={isHolder}
+            />
           </div>
         </Dialog.Content>
       </Dialog.Portal>
