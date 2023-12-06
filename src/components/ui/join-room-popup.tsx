@@ -21,7 +21,8 @@ const network = new StacksTestnet();
 
 const Result = ({
   status,
-  subject
+  subject,
+  isHolder
 }: {
   status: string;
   subject: string;
@@ -56,7 +57,6 @@ const Result = ({
     };
     openContractCall(txOptions);
   };
-  const isHolder = status === successStatus;
   if (isHolder) {
     return (
       <div className="mt-4 border-t border-slate-300 border-dashed w-full py-2 italic">
@@ -136,11 +136,11 @@ export const JoinRoomPopup = ({ address }: { address: string }) => {
     setRoomStatus('Checking...');
     checkIfIsHolder(address, subjectAddress, address)
       .then((isHolder) => {
-        console.log({ isHolder });
         setRoomStatus(notAHolderMessage);
         // Check result and follow-up
         if (isHolder) {
           setIsHolder(true);
+          setRoomStatus(successStatus);
         }
       })
       .catch((error) => {
