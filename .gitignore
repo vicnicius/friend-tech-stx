@@ -267,4 +267,6 @@ dist
 **/settings/Testnet.toml
 .cache/**
 
+keys.txt
+
 # End of https://www.toptal.com/developers/gitignore/api/node,jetbrains+all,visualstudiocode,macos
